@@ -9,12 +9,15 @@ class ConvNet:
 
     def add_layer(self, layer_type, layer_params):
         if layer_type == 'conv':
-            HF = layer_params['HF']
-            WF = layer_params['WF']
-            DF = layer_params['DF']
-            NF = layer_params['NF']
-            l_weights = np.random.normal(0, layer_params['var'], (HF, WF, DF, NF))
+            #对于卷基层，需要学习的参数是卷积核矩阵和偏置b
+            HF = layer_params['HF'] #卷积核的长
+            WF = layer_params['WF'] #卷积核的宽
+            DF = layer_params['DF'] #卷积核的深度
+            NF = layer_params['NF'] #卷积核的个数
+            l_weights = np.random.normal(0, layer_params['var'], (HF, WF, DF, NF)) 
+            #产生一个维度为(HF,WF,DF,NF)的随机数矩阵
             l_bias = np.zeros((1, 1, 1, NF))
+            #一个卷积核对应一个偏置b
             layer_params = {'type': 'conv',
                             'weights': l_weights,
                             'bias': l_bias,
@@ -22,7 +25,7 @@ class ConvNet:
                             'pad': layer_params['pad'],
                             'input': None,
                             'output': None,
-                            'grad': None}
+                            'grad': None}#记录梯度
             self.layers.append(layer_params)
         elif layer_type == 'max_pooling':
             layer_params = {'type': 'max_pooling',
@@ -32,7 +35,7 @@ class ConvNet:
                             'pad': layer_params['pad'],
                             'input': None,
                             'output': None,
-                            'grad': None}
+                            'grad': None}#记录梯度
             self.layers.append(layer_params)
         elif layer_type == 'relu':
             layer_params = {'type': 'relu',
@@ -56,6 +59,7 @@ class ConvNet:
                 each_layer['input'] = data
             else:
                 each_layer['input'] = self.layers[idx - 1]['output']
+
             if each_layer['type'] == 'conv':
                 params = {'stride': each_layer['stride'],
                           'pad': each_layer['pad']}
@@ -95,9 +99,10 @@ class ConvNet:
                               'pad': self.layers[idx]['pad']}
                 self.layers[idx]['grad'] = conv_backward(self.layers[idx]['input'],
                                                     self.layers[idx]['weights'],
-                                                    self.layers[idx]['bias'],
+                                                    self.layers[idx]['bias'], 
                                                     conv_param,
                                                     self.layers[idx + 1]['grad'][0])
+                                                    #下一层的dx
                 self.layers[idx]['weights'] = self.layers[idx]['weights'] \
                                               - lr * self.layers[idx]['grad'][1]
                 # the learning rate of bias is 2 times of weights'
@@ -132,22 +137,22 @@ class ConvNet:
         return prediction
 
     def train(self, train_data, train_label, lr, epoch=20, batch_size=100):
-        H, W, D, N = train_data.shape
-        _, N_l = train_label.shape
+        H, W, D, N = train_data.shape #N是图像个数，D是channel的个数
+        _, N_l = train_label.shape #N_l是图像个数
         assert N == N_l, 'Wrong data input!'
         # shuffle train_data
         shuffle_idx = np.arange(N)
         train_data = train_data[:, :, :, shuffle_idx]
         train_label = train_label[:, shuffle_idx]
         error_list = []
-        for epoch_idx in np.arange(epoch):
-            batch_num = np.ceil(float(N) / float(batch_size))
-            for batch_idx in np.arange(batch_num):
+        for epoch_idx in np.arange(epoch):#一个epoch要遍历一遍所有的样本
+            batch_num = np.ceil(float(N) / float(batch_size)) #N是图像个数,batch_size是每个batch的大小
+            for batch_idx in np.arange(batch_num):#遍历每一个batch
                 # start timing
                 start_t = time.clock()
                 sub_train_data = None
                 sub_train_label= None
-                if batch_idx == batch_num - 1:
+                if batch_idx == batch_num - 1: #最后一个batch
                     sub_train_data = train_data[:, :, :, batch_idx * batch_size:]
                     sub_train_label = train_label[:, batch_idx * batch_size:]
                 else:

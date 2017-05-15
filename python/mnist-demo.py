@@ -5,7 +5,7 @@ import numpy as np
 from load_mnist import load_mnist
 from model.initial_LeNet import initial_LeNet
 
-train_data, train_label, valid_data, valid_label = load_mnist()
+train_data, train_label, valid_data, valid_label = load_mnist()#train_data的维度是(28,28,1,50000)
 cnn = initial_LeNet()
 lr = [0.01, 0.001]
 cnn.train(train_data, train_label, lr, epoch=2, batch_size=100)
